@@ -1,7 +1,3 @@
-
-const TMDB_BASE = 'https://api.themoviedb.org/3'
-const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY!
-
 export const IMG_BASE = 'https://image.tmdb.org/t/p/w500'
 
 export const GENRE_MAP: Record<number, string> = {
@@ -33,17 +29,18 @@ export const GENRE_LABELS: Record<number, string> = {
   37: 'Western'
 }
 
+/**
+ * All TMDB calls go through our server-side /api/tmdb route.
+ * Zero direct calls to api.themoviedb.org from the client.
+ */
 export async function tmdb(path: string, extraParams: Record<string, string> = {}) {
-  const params = new URLSearchParams({
-    api_key: TMDB_KEY,
-    ...extraParams
-  })
+  const params = new URLSearchParams(extraParams)
+  params.set('path', path)
 
-  const url = `${TMDB_BASE}${path}?${params.toString()}`
-  const res = await fetch(url)
+  const res = await fetch(`/api/tmdb?${params.toString()}`)
 
   if (!res.ok) {
-    throw new Error(`TMDB error: ${res.status} on ${path}`)
+    throw new Error(`TMDB proxy error: ${res.status} on ${path}`)
   }
 
   return res.json()
